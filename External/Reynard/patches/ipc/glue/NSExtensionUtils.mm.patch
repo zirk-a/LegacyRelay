@@ -1,0 +1,362 @@
+diff --git a/ipc/glue/NSExtensionUtils.mm b/ipc/glue/NSExtensionUtils.mm
+new file mode 100644
+index 000000000000..518377a5f5dd
+--- /dev/null
++++ b/ipc/glue/NSExtensionUtils.mm
+@@ -0,0 +1,356 @@
++/* This Source Code Form is subject to the terms of the Mozilla Public
++ * License, v. 2.0. If a copy of the MPL was not distributed with this
++ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
++
++/* This source code is introduced during the work of an iOS 13+ browser
++ * https://github.com/minh-ton/reynard-browser in Feb 2026. */
++
++#include "NSExtensionUtils.h"
++#include "LaunchError.h"
++
++#import <Foundation/Foundation.h>
++#include <memory>
++
++#import "mozilla/widget/GeckoViewSupport.h"
++
++using namespace mozilla::widget;
++
++NS_ASSUME_NONNULL_BEGIN
++
++@interface NSExtension : NSObject
+++ (nullable instancetype)extensionWithIdentifier:(NSString*)identifier
++                                           error:(NSError* _Nullable*)error;
++- (nullable NSUUID*)
++    beginExtensionRequestWithInputItems:(NSArray<NSExtensionItem*>*)items
++                                  error:(NSError* _Nullable*)error;
++- (void)cancelExtensionRequestWithIdentifier:(NSUUID*)requestIdentifier;
++- (void)setRequestInterruptionBlock:
++    (void (^_Nonnull)(NSUUID* requestIdentifier))block;
++@end
++
++@interface NSXPCConnection (Private)
++- (xpc_connection_t _Nullable)_xpcConnection;
++@end
++
++@protocol ExtensionBootstrapPing
++- (void)ping;
++@end
++
++@interface ExtensionConnectionDelegate
++    : NSObject <NSXPCListenerDelegate, ExtensionBootstrapPing>
++@property(copy, nullable) void (^connectionHandler)(NSXPCConnection* connection)
++    ;
++@property(copy, nullable) void (^pingHandler)(void);
++@end
++
++@implementation ExtensionConnectionDelegate
++
++- (BOOL)listener:(NSXPCListener*)listener
++    shouldAcceptNewConnection:(NSXPCConnection*)newConnection {
++  if (self.connectionHandler) {
++    self.connectionHandler(newConnection);
++  }
++  [newConnection resume];
++  return YES;
++}
++
++- (void)ping {
++  if (self.pingHandler) {
++    self.pingHandler();
++  }
++}
++
++@end
++
++static dispatch_queue_t ExtensionLaunchQueue() {
++  static dispatch_queue_t queue;
++  static dispatch_once_t onceToken;
++  dispatch_once(&onceToken, ^{
++    queue = dispatch_queue_create("com.minh-ton.Reynard.ExtensionLaunchQueue",
++                                  DISPATCH_QUEUE_SERIAL);
++  });
++  return queue;
++}
++
++static dispatch_queue_t ExtensionCompletionQueue() {
++  static dispatch_queue_t queue;
++  static dispatch_once_t onceToken;
++  dispatch_once(&onceToken, ^{
++    queue = dispatch_queue_create(
++        "com.minh-ton.Reynard.ExtensionCompletionQueue", DISPATCH_QUEUE_SERIAL);
++  });
++  return queue;
++}
++
++static NSError* ExtensionLaunchError(NSString* description,
++                                     NSError* _Nullable underlying = nil) {
++  NSDictionary* userInfo = underlying
++                               ? @{
++                                   NSLocalizedDescriptionKey : description,
++                                   NSUnderlyingErrorKey : underlying,
++                                 }
++                               : @{NSLocalizedDescriptionKey : description};
++  return [NSError errorWithDomain:@"ReynardExtension" code:1 userInfo:userInfo];
++}
++
++static NSString* _Nullable GetExtensionIdentifier() {
++  NSURL* plugInsURL = [[NSBundle mainBundle] builtInPlugInsURL];
++  if (!plugInsURL) {
++    return nil;
++  }
++
++  NSURL* extensionURL =
++      [plugInsURL URLByAppendingPathComponent:@"Reynard Helper.appex"];
++  return [[NSBundle bundleWithURL:extensionURL] bundleIdentifier];
++}
++
++@interface ExtensionProcess : NSObject {
++ @private
++  NSExtension* mExtension;
++  NSXPCListener* mListener;
++  ExtensionConnectionDelegate* mListenerDelegate;
++  NSXPCConnection* mConnection;
++  NSUUID* mRequestIdentifier;
++  xpc_connection_t mLibXPCConnection;
++  bool mInvalidated;
++}
++
++- (void)startWithCompletion:
++    (void (^_Nonnull)(NSError* _Nullable error))aCompletion;
++- (xpc_connection_t _Nullable)copyLibXPCConnection;
++- (void)invalidate;
++
++@end
++
++@implementation ExtensionProcess
++
++- (void)startWithCompletion:
++    (void (^_Nonnull)(NSError* _Nullable error))aCompletion {
++  void (^completion)(NSError* _Nullable) = [aCompletion copy];
++
++  dispatch_async(ExtensionLaunchQueue(), ^{
++    __block bool completed = false;
++    void (^completeOnce)(NSError* _Nullable) = ^(NSError* _Nullable error) {
++      dispatch_async(ExtensionCompletionQueue(), ^{
++        if (completed) {
++          return;
++        }
++        completed = true;
++        completion(error);
++        [completion release];
++      });
++    };
++
++    if (mInvalidated) {
++      completeOnce(
++          ExtensionLaunchError(@"NSExtension process already invalidated"));
++      return;
++    }
++
++    mListenerDelegate = [[ExtensionConnectionDelegate alloc] init];
++    mListener = [[NSXPCListener anonymousListener] retain];
++
++    __block ExtensionProcess* process = self;
++    [mListenerDelegate setConnectionHandler:^(NSXPCConnection* connection) {
++      if (process->mInvalidated || process->mConnection) {
++        [connection invalidate];
++        return;
++      }
++
++      process->mConnection = [connection retain];
++      [process->mListenerDelegate setPingHandler:^{
++        completeOnce(nil);
++      }];
++      [process->mConnection
++          setExportedInterface:
++              [NSXPCInterface
++                  interfaceWithProtocol:@protocol(ExtensionBootstrapPing)]];
++      [process->mConnection setExportedObject:process->mListenerDelegate];
++      [process->mConnection setInvalidationHandler:^{
++        completeOnce(ExtensionLaunchError(
++            @"NSXPC connection invalidated before bootstrap"));
++      }];
++
++      xpc_connection_t libXPC = [process->mConnection _xpcConnection];
++      if (libXPC) {
++        process->mLibXPCConnection = xpc_retain(libXPC);
++      }
++
++      if (!process->mLibXPCConnection) {
++        completeOnce(ExtensionLaunchError(
++            @"Failed to get libxpc connection from NSXPCConnection"));
++        return;
++      }
++    }];
++
++    [mListener setDelegate:mListenerDelegate];
++    [mListener resume];
++
++    NSString* extensionIdentifier = GetExtensionIdentifier();
++    if (!extensionIdentifier) {
++      completeOnce(ExtensionLaunchError(
++          @"Unable to resolve extension bundle identifier"));
++      return;
++    }
++
++    NSError* extensionError = nil;
++    mExtension = [[NSExtension extensionWithIdentifier:extensionIdentifier
++                                                 error:&extensionError] retain];
++    if (!mExtension) {
++      completeOnce(ExtensionLaunchError(@"Failed to create NSExtension",
++                                        extensionError));
++      return;
++    }
++
++    [mExtension setRequestInterruptionBlock:^(NSUUID* requestIdentifier) {
++      completeOnce(ExtensionLaunchError(
++          @"NSExtension request interrupted before bootstrap"));
++    }];
++
++    NSExtensionItem* input = [[[NSExtensionItem alloc] init] autorelease];
++    [input setUserInfo:@{@"ReynardXPCListenerEndpoint" : [mListener endpoint]}];
++
++    NSError* requestError = nil;
++    mRequestIdentifier =
++        [[mExtension beginExtensionRequestWithInputItems:@[ input ]
++                                                   error:&requestError] retain];
++    if (!mRequestIdentifier) {
++      completeOnce(ExtensionLaunchError(@"Failed to start NSExtension request",
++                                        requestError));
++      return;
++    }
++
++    dispatch_after(
++        dispatch_time(DISPATCH_TIME_NOW, 8 * NSEC_PER_SEC),
++        ExtensionLaunchQueue(), ^{
++          completeOnce(ExtensionLaunchError(
++              @"Timed out waiting for child extension NSXPC connection"));
++        });
++  });
++}
++
++- (xpc_connection_t _Nullable)copyLibXPCConnection {
++  return mLibXPCConnection ? xpc_retain(mLibXPCConnection) : nullptr;
++}
++
++- (void)invalidate {
++  mInvalidated = true;
++
++  if (mLibXPCConnection) {
++    xpc_connection_cancel(mLibXPCConnection);
++    xpc_release(mLibXPCConnection);
++    mLibXPCConnection = nullptr;
++  }
++
++  if (mConnection) {
++    [mConnection invalidate];
++    [mConnection release];
++    mConnection = nil;
++  }
++
++  if (mExtension) {
++    if (mRequestIdentifier) {
++      [mExtension cancelExtensionRequestWithIdentifier:mRequestIdentifier];
++    }
++    [mExtension release];
++    mExtension = nil;
++  }
++
++  if (mRequestIdentifier) {
++    [mRequestIdentifier release];
++    mRequestIdentifier = nil;
++  }
++
++  if (mListener) {
++    [mListener setDelegate:nil];
++    [mListener invalidate];
++    [mListener release];
++    mListener = nil;
++  }
++
++  if (mListenerDelegate) {
++    [mListenerDelegate setConnectionHandler:nil];
++    [mListenerDelegate setPingHandler:nil];
++    [mListenerDelegate release];
++    mListenerDelegate = nil;
++  }
++}
++
++- (void)dealloc {
++  [self invalidate];
++  [super dealloc];
++}
++
++@end
++
++NS_ASSUME_NONNULL_END
++
++namespace mozilla::ipc {
++
++void BEProcessCapabilityGrantDeleter::operator()(void* _Nullable aGrant) const {
++}
++
++void NSExtensionProcess::StartProcess(
++    const std::function<void(Result<NSExtensionProcess, LaunchError>&&)>&
++        aCompletion) {
++  auto ownedCompletion = std::make_shared<
++      std::function<void(Result<NSExtensionProcess, LaunchError>&&)>>(
++      aCompletion);
++
++  ExtensionProcess* process = [[ExtensionProcess alloc] init];
++
++  [process startWithCompletion:^(NSError* error) {
++    if (error) {
++      [process release];
++      (*ownedCompletion)(Err(LaunchError("NSExtensionProcess::StartProcess")));
++      return;
++    }
++
++    (*ownedCompletion)(NSExtensionProcess(process));
++  }];
++}
++
++DarwinObjectPtr<xpc_connection_t> NSExtensionProcess::MakeLibXPCConnection() {
++  return AdoptDarwinObject(
++      [static_cast<ExtensionProcess*>(mProcessObject) copyLibXPCConnection]);
++}
++
++void NSExtensionProcess::Invalidate() {
++  [static_cast<ExtensionProcess*>(mProcessObject) invalidate];
++}
++
++UniqueBEProcessCapabilityGrant NSExtensionProcess::GrantForegroundCapability() {
++  return UniqueBEProcessCapabilityGrant(nil);
++}
++
++NSExtensionProcess::NSExtensionProcess(const NSExtensionProcess& aOther)
++    : mProcessObject(aOther.mProcessObject) {
++  [static_cast<ExtensionProcess*>(mProcessObject) retain];
++}
++
++NSExtensionProcess& NSExtensionProcess::operator=(
++    const NSExtensionProcess& aOther) {
++  void* oldProcessObject = std::exchange(mProcessObject, aOther.mProcessObject);
++  [static_cast<ExtensionProcess*>(mProcessObject) retain];
++  [static_cast<ExtensionProcess*>(oldProcessObject) release];
++  return *this;
++}
++
++NSExtensionProcess::~NSExtensionProcess() {
++  [static_cast<ExtensionProcess*>(mProcessObject) release];
++}
++
++void LockdownNSExtensionProcess(NSExtensionSandboxRevision aRevision) {
++  if (id<GeckoProcessExtension> process = GetCurrentProcessExtension()) {
++    switch (aRevision) {
++      case NSExtensionSandboxRevision::Revision1:
++        [process lockdownSandbox:@"1.0"];
++        return;
++      default:
++        NSLog(@"Unknown NSExtension sandbox revision");
++        return;
++    }
++  }
++}
++
++}  // namespace mozilla::ipc

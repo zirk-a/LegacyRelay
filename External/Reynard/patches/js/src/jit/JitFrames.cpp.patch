@@ -1,0 +1,62 @@
+diff --git a/js/src/jit/JitFrames.cpp b/js/src/jit/JitFrames.cpp
+index a516941f2755..f4205f5d1aab 100644
+--- a/js/src/jit/JitFrames.cpp
++++ b/js/src/jit/JitFrames.cpp
+@@ -12,7 +12,9 @@
+ #include "jit/BaselineFrame.h"
+ #include "jit/BaselineIC.h"
+ #include "jit/BaselineJIT.h"
++#include "jit/CacheIRCompiler.h"
+ #include "jit/Ion.h"
++#include "jit/IonIC.h"
+ #include "jit/IonScript.h"
+ #include "jit/JitRuntime.h"
+ #include "jit/JitSpewer.h"
+@@ -1215,7 +1217,10 @@ static void TraceBaselineStubFrame(JSTracer* trc, const JSJitFrameIter& frame) {
+       MOZ_ASSERT(stub->usesTrampolineCode());
+     } else {
+       MOZ_ASSERT(stub->toCacheIRStub()->makesGCCalls());
+-      stub->toCacheIRStub()->trace(trc);
++      for (ICStub* activeStub = stub; activeStub && !activeStub->isFallback();
++           activeStub = activeStub->toCacheIRStub()->next()) {
++        activeStub->toCacheIRStub()->trace(trc);
++      }
+ 
+ #ifndef ENABLE_PORTABLE_BASELINE_INTERP
+       for (int i = 0; i < stub->jitCode()->localTracingSlots(); ++i) {
+@@ -1235,7 +1240,16 @@ static void TraceWeakBaselineStubFrame(JSTracer* trc,
+   if (ICStub* stub = layout->maybeStubPtr()) {
+     if (!stub->isFallback()) {
+       MOZ_ASSERT(stub->toCacheIRStub()->makesGCCalls());
+-      stub->toCacheIRStub()->traceWeak(trc);
++      ICCacheIRStub* activeStub = stub->toCacheIRStub();
++      activeStub->traceWeak(trc);
++
++      while (ICCacheIRStub* next = activeStub->nextCacheIR()) {
++        if (!next->traceWeak(trc)) {
++          activeStub->setNext(next->next());
++          continue;
++        }
++        activeStub = next;
++      }
+     }
+   }
+ }
+@@ -1244,6 +1258,17 @@ static void TraceIonICCallFrame(JSTracer* trc, const JSJitFrameIter& frame) {
+   MOZ_ASSERT(frame.type() == FrameType::IonICCall);
+   IonICCallFrameLayout* layout = (IonICCallFrameLayout*)frame.fp();
+   TraceRoot(trc, layout->stubCode(), "ion-ic-call-code");
++  if (IonICStub* activeStub = layout->stub()) {
++    TraceCacheIRStub(trc, activeStub, activeStub->stubInfo());
++
++    uint8_t* nextCodeRaw = activeStub->nextCodeRaw();
++    for (IonICStub* next = activeStub->next(); next; next = next->next()) {
++      JitCode* code = JitCode::FromExecutable(nextCodeRaw);
++      TraceManuallyBarrieredEdge(trc, &code, "ion-ic-active-code");
++      TraceCacheIRStub(trc, next, next->stubInfo());
++      nextCodeRaw = next->nextCodeRaw();
++    }
++  }
+ 
+   for (int i = 0; i < (*layout->stubCode())->localTracingSlots(); ++i) {
+     TraceRoot(trc, layout->locallyTracedValuePtr(i),

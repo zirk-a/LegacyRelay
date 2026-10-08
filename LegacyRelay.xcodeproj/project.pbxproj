@@ -1,0 +1,855 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {};
+	objectVersion = 55;
+	objects = {
+
+/* Begin PBXBuildFile section */
+        A11C00000000000000000001 /* build:Sideload:resource:LegacyInstagramCover */ = { isa = PBXBuildFile; fileRef = A11C00000000000000000011; };
+        A11C00000000000000000002 /* build:Sideload:resource:LegacySnapchatCover */ = { isa = PBXBuildFile; fileRef = A11C00000000000000000012; };
+        A11C00000000000000000003 /* build:TrollStore:resource:LegacyInstagramCover */ = { isa = PBXBuildFile; fileRef = A11C00000000000000000011; };
+        A11C00000000000000000004 /* build:TrollStore:resource:LegacySnapchatCover */ = { isa = PBXBuildFile; fileRef = A11C00000000000000000012; };
+		A7BF67DD508739F719CEA084 /* build:Sideload:file:Sources/AppDelegate.swift */ = {
+			isa = PBXBuildFile;
+			fileRef = 29431357BB91656BFB39F2C2;
+		};
+		42642EC65D0F3578A30E495E /* build:Sideload:file:Sources/SceneDelegate.swift */ = {
+			isa = PBXBuildFile;
+			fileRef = 5F81C34BA0632B306E90FD1D;
+		};
+		1AF0E3A256D1E74A64249226 /* build:Sideload:file:Sources/LegacyRelayJITStatus.swift */ = {
+			isa = PBXBuildFile;
+			fileRef = A728A305F4394300B59D0D23;
+		};
+		CB97D9E3A40672DD8118512D /* build:Sideload:file:Sources/LegacyRelayGeckoProfile.swift */ = {
+			isa = PBXBuildFile;
+			fileRef = F4C79AB1A754C6B00F0A6537;
+		};
+		902A172326F05765C87602DC /* build:Sideload:file:Sources/LegacyRelayGeckoSessionArchive.swift */ = {
+			isa = PBXBuildFile;
+			fileRef = AEB9CD235CFBBF33F68A9F99;
+		};
+		EB1121FDB5D417E3D22E19D3 /* build:Sideload:file:Sources/LegacyRelayGeckoAddonManager.swift */ = {
+			isa = PBXBuildFile;
+			fileRef = 5F3E4CDC200A614ECF8D1933;
+		};
+		7B09485FEF4F7692141E0B7E /* build:Sideload:file:Sources/main.swift */ = {
+			isa = PBXBuildFile;
+			fileRef = F2362E52C490CBF9F77D5580;
+		};
+		B4BC42FEF20F4C338051D82A /* build:Sideload:file:Sources/LegacyRelay.swift */ = {
+			isa = PBXBuildFile;
+			fileRef = C2BAD79DB52CB79BFC00C797;
+		};
+		0FAB95893C4411B4B0165B53 /* build:Sideload:file:Sources/LegacyRelayAppSettingsViewController.swift */ = {
+			isa = PBXBuildFile;
+			fileRef = 229E61CE383BCCB0B362C832;
+		};
+		ECB0262374516170915B062D /* build:Sideload:file:Sources/LegacyRelayGeckoViewController.swift */ = {
+			isa = PBXBuildFile;
+			fileRef = D57F96668D807C721ABC8685;
+		};
+		23DAF0BE3E957B2C3747970C /* build:Sideload:file:Bridges/LegacyRelayOfficialJIT.m */ = {
+			isa = PBXBuildFile;
+			settings = { COMPILER_FLAGS = "-fmodules -Wno-error=non-modular-include-in-framework-module"; };
+			fileRef = 7615259CB2FF0396A112CFBB;
+		};
+		C35119744EA81ADC2E8CB62D /* build:Sideload:file:External/Engine/DDIManager.swift */ = {
+			isa = PBXBuildFile;
+			fileRef = DDE46E7FF1D7CAA511B2A87A;
+		};
+		28921BC862479558EF5E1883 /* build:Sideload:resource:LegacyRelayIcon@2x.png */ = {
+			isa = PBXBuildFile;
+			fileRef = D84CB8818D86AEFA640D3835;
+		};
+		1780997E60D4B940563E0E79 /* build:Sideload:resource:LegacyRelayIcon@3x.png */ = {
+			isa = PBXBuildFile;
+			fileRef = 9DE218721A4A20A612880E70;
+		};
+		23CFC19BC68FA11260D4C538 /* build:TrollStore:file:Sources/AppDelegate.swift */ = {
+			isa = PBXBuildFile;
+			fileRef = 29431357BB91656BFB39F2C2;
+		};
+		A81E8F545014514E4B17EADD /* build:TrollStore:file:Sources/SceneDelegate.swift */ = {
+			isa = PBXBuildFile;
+			fileRef = 5F81C34BA0632B306E90FD1D;
+		};
+		DB5FD8A648EF953273D6504E /* build:TrollStore:file:Sources/LegacyRelayJITStatus.swift */ = {
+			isa = PBXBuildFile;
+			fileRef = A728A305F4394300B59D0D23;
+		};
+		A8CD67ACAC7D94679527F6EB /* build:TrollStore:file:Sources/LegacyRelayGeckoProfile.swift */ = {
+			isa = PBXBuildFile;
+			fileRef = F4C79AB1A754C6B00F0A6537;
+		};
+		708AE57D2D1B3C3732153DBD /* build:TrollStore:file:Sources/LegacyRelayGeckoSessionArchive.swift */ = {
+			isa = PBXBuildFile;
+			fileRef = AEB9CD235CFBBF33F68A9F99;
+		};
+		4309B74E1C1C71DB7B0A2BAE /* build:TrollStore:file:Sources/LegacyRelayGeckoAddonManager.swift */ = {
+			isa = PBXBuildFile;
+			fileRef = 5F3E4CDC200A614ECF8D1933;
+		};
+		78A1EAD618873172DE7C15EB /* build:TrollStore:file:Sources/main.swift */ = {
+			isa = PBXBuildFile;
+			fileRef = F2362E52C490CBF9F77D5580;
+		};
+		BA096F918C0468E19E57EF63 /* build:TrollStore:file:Variants/TrollStore/LegacyRelay.swift */ = {
+			isa = PBXBuildFile;
+			fileRef = 8368A99628FD0AB7A6FCBBBC;
+		};
+		763839DF8DD96AF162947D56 /* build:TrollStore:file:Variants/TrollStore/LegacyRelayAppSettingsViewController.swift */ = {
+			isa = PBXBuildFile;
+			fileRef = FF5D918AAFFD808295FC1A01;
+		};
+		B947756FC16A37BB6C73ACED /* build:TrollStore:file:Variants/TrollStore/LegacyRelayGeckoViewController.swift */ = {
+			isa = PBXBuildFile;
+			fileRef = 7D40EC1909959644AFBFD3B9;
+		};
+		9DAC26A97BF305CE15023DEF /* build:TrollStore:file:Bridges/LegacyRelayTrollStoreJIT.m */ = {
+			isa = PBXBuildFile;
+			settings = { COMPILER_FLAGS = "-fmodules -Wno-error=non-modular-include-in-framework-module"; };
+			fileRef = 4BCD707CD14354D864442E56;
+		};
+		AFD820CC2CB3643DA9CBDF4F /* build:TrollStore:file:External/Engine/DDIManager.swift */ = {
+			isa = PBXBuildFile;
+			fileRef = DDE46E7FF1D7CAA511B2A87A;
+		};
+		5731389E6B9C0BCB9811AE80 /* build:TrollStore:resource:LegacyRelayIcon@2x.png */ = {
+			isa = PBXBuildFile;
+			fileRef = D84CB8818D86AEFA640D3835;
+		};
+		C71B1D271E60A0D1D458A68A /* build:TrollStore:resource:LegacyRelayIcon@3x.png */ = {
+			isa = PBXBuildFile;
+			fileRef = 9DE218721A4A20A612880E70;
+		};
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+        A11C00000000000000000011 /* file:Resources/LegacyInstagramCover.PNG */ = { isa = PBXFileReference; lastKnownFileType = image.png; path = LegacyInstagramCover.PNG; sourceTree = "<group>"; };
+        A11C00000000000000000012 /* file:Resources/LegacySnapchatCover.JPG */ = { isa = PBXFileReference; lastKnownFileType = image.jpeg; path = LegacySnapchatCover.JPG; sourceTree = "<group>"; };
+		29431357BB91656BFB39F2C2 /* file:Sources/AppDelegate.swift */ = {
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.swift;
+			path = AppDelegate.swift;
+			sourceTree = "<group>";
+		};
+		5F81C34BA0632B306E90FD1D /* file:Sources/SceneDelegate.swift */ = {
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.swift;
+			path = SceneDelegate.swift;
+			sourceTree = "<group>";
+		};
+		A728A305F4394300B59D0D23 /* file:Sources/LegacyRelayJITStatus.swift */ = {
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.swift;
+			path = LegacyRelayJITStatus.swift;
+			sourceTree = "<group>";
+		};
+		F4C79AB1A754C6B00F0A6537 /* file:Sources/LegacyRelayGeckoProfile.swift */ = {
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.swift;
+			path = LegacyRelayGeckoProfile.swift;
+			sourceTree = "<group>";
+		};
+		AEB9CD235CFBBF33F68A9F99 /* file:Sources/LegacyRelayGeckoSessionArchive.swift */ = {
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.swift;
+			path = LegacyRelayGeckoSessionArchive.swift;
+			sourceTree = "<group>";
+		};
+		5F3E4CDC200A614ECF8D1933 /* file:Sources/LegacyRelayGeckoAddonManager.swift */ = {
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.swift;
+			path = LegacyRelayGeckoAddonManager.swift;
+			sourceTree = "<group>";
+		};
+		F2362E52C490CBF9F77D5580 /* file:Sources/main.swift */ = {
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.swift;
+			path = main.swift;
+			sourceTree = "<group>";
+		};
+		C2BAD79DB52CB79BFC00C797 /* file:Sources/LegacyRelay.swift */ = {
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.swift;
+			path = LegacyRelay.swift;
+			sourceTree = "<group>";
+		};
+		229E61CE383BCCB0B362C832 /* file:Sources/LegacyRelayAppSettingsViewController.swift */ = {
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.swift;
+			path = LegacyRelayAppSettingsViewController.swift;
+			sourceTree = "<group>";
+		};
+		D57F96668D807C721ABC8685 /* file:Sources/LegacyRelayGeckoViewController.swift */ = {
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.swift;
+			path = LegacyRelayGeckoViewController.swift;
+			sourceTree = "<group>";
+		};
+		8368A99628FD0AB7A6FCBBBC /* file:Variants/TrollStore/LegacyRelay.swift */ = {
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.swift;
+			path = LegacyRelay.swift;
+			sourceTree = "<group>";
+		};
+		FF5D918AAFFD808295FC1A01 /* file:Variants/TrollStore/LegacyRelayAppSettingsViewController.swift */ = {
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.swift;
+			path = LegacyRelayAppSettingsViewController.swift;
+			sourceTree = "<group>";
+		};
+		7D40EC1909959644AFBFD3B9 /* file:Variants/TrollStore/LegacyRelayGeckoViewController.swift */ = {
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.swift;
+			path = LegacyRelayGeckoViewController.swift;
+			sourceTree = "<group>";
+		};
+		7615259CB2FF0396A112CFBB /* file:Bridges/LegacyRelayOfficialJIT.m */ = {
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.c.objc;
+			path = LegacyRelayOfficialJIT.m;
+			sourceTree = "<group>";
+		};
+		4BCD707CD14354D864442E56 /* file:Bridges/LegacyRelayTrollStoreJIT.m */ = {
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.c.objc;
+			path = LegacyRelayTrollStoreJIT.m;
+			sourceTree = "<group>";
+		};
+		D84CB8818D86AEFA640D3835 /* file:Resources/LegacyRelayIcon@2x.png */ = {
+			isa = PBXFileReference;
+			lastKnownFileType = image.png;
+			path = "LegacyRelayIcon@2x.png";
+			sourceTree = "<group>";
+		};
+		9DE218721A4A20A612880E70 /* file:Resources/LegacyRelayIcon@3x.png */ = {
+			isa = PBXFileReference;
+			lastKnownFileType = image.png;
+			path = "LegacyRelayIcon@3x.png";
+			sourceTree = "<group>";
+		};
+		896C485C73258D2C3CF30269 /* file:Resources/LegacyRelayIcon-1024.png */ = {
+			isa = PBXFileReference;
+			lastKnownFileType = image.png;
+			path = LegacyRelayIcon-1024.png;
+			sourceTree = "<group>";
+		};
+		5369C7CD3AA2362F13106E33 /* file:Info.plist */ = {
+			isa = PBXFileReference;
+			lastKnownFileType = text.plist.xml;
+			path = Info.plist;
+			sourceTree = "<group>";
+		};
+		741EF6081EB8F99B01FAD1F7 /* file:Resources/AppIcon.plist */ = {
+			isa = PBXFileReference;
+			lastKnownFileType = text.plist.xml;
+			path = AppIcon.plist;
+			sourceTree = "<group>";
+		};
+		8ADBD3F4D56EAF0378C68C3F /* file:BuildScripts/Check-Xcode-Inputs.sh */ = {
+			isa = PBXFileReference;
+			lastKnownFileType = text.script.sh;
+			path = Check-Xcode-Inputs.sh;
+			sourceTree = "<group>";
+		};
+		81DA07A1988D96F7F6260ED7 /* file:BuildSupport/JITInclude/xpc/xpc.h */ = {
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.c.h;
+			path = xpc.h;
+			sourceTree = "<group>";
+		};
+		75EA21BC84E80D3C571A6DDA /* file:Configurations/Shared.xcconfig */ = {
+			isa = PBXFileReference;
+			lastKnownFileType = text.xcconfig;
+			path = Shared.xcconfig;
+			sourceTree = "<group>";
+		};
+		176D22E70205AFB25FFE4106 /* file:Configurations/Sideload.xcconfig */ = {
+			isa = PBXFileReference;
+			lastKnownFileType = text.xcconfig;
+			path = Sideload.xcconfig;
+			sourceTree = "<group>";
+		};
+		F079DC85BAECC2DC2594425D /* file:Configurations/TrollStore.xcconfig */ = {
+			isa = PBXFileReference;
+			lastKnownFileType = text.xcconfig;
+			path = TrollStore.xcconfig;
+			sourceTree = "<group>";
+		};
+		0ED8091B593F473B689FCFD1 /* file:README.md */ = {
+			isa = PBXFileReference;
+			lastKnownFileType = net.daringfireball.markdown;
+			path = README.md;
+			sourceTree = "<group>";
+		};
+		9AF4AA4F2E7ECC2C264AF5A6 /* file:CREDITS.md */ = {
+			isa = PBXFileReference;
+			lastKnownFileType = net.daringfireball.markdown;
+			path = CREDITS.md;
+			sourceTree = "<group>";
+		};
+		7236CA1B9E6AD3673687FB3B /* file:LICENSE */ = {
+			isa = PBXFileReference;
+			lastKnownFileType = text;
+			path = LICENSE;
+			sourceTree = "<group>";
+		};
+		6E3C7BB333FCB7D303D99C6B /* file:LICENSES/Firefox-MPL-2.0.txt */ = {
+			isa = PBXFileReference;
+			lastKnownFileType = text;
+			path = Firefox-MPL-2.0.txt;
+			sourceTree = "<group>";
+		};
+		06BF212BCFBD74799C6AA05D /* file:LICENSES/Reynard-GPL-3.0.txt */ = {
+			isa = PBXFileReference;
+			lastKnownFileType = text;
+			path = Reynard-GPL-3.0.txt;
+			sourceTree = "<group>";
+		};
+		DAB4331FE1FBE61D30E4CD2D /* file:LICENSES/User-Agent-Switcher-GPL-3.0.txt */ = {
+			isa = PBXFileReference;
+			lastKnownFileType = text;
+			path = User-Agent-Switcher-GPL-3.0.txt;
+			sourceTree = "<group>";
+		};
+		F604BEFA4DFA56561DA4E488 /* file:External/README.md */ = {
+			isa = PBXFileReference;
+			lastKnownFileType = net.daringfireball.markdown;
+			path = README.md;
+			sourceTree = "<group>";
+		};
+		DDE46E7FF1D7CAA511B2A87A /* file:External/Engine/DDIManager.swift */ = {
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.swift;
+			path = Engine/DDIManager.swift;
+			sourceTree = "<group>";
+		};
+		994EBBD5090660A4A95D96F2 /* product:Sideload */ = {
+			isa = PBXFileReference;
+			explicitFileType = wrapper.application;
+			includeInIndex = 0;
+			path = LegacyRelay.app;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		BDDB9B208E96070E06DDC156 /* product:TrollStore */ = {
+			isa = PBXFileReference;
+			explicitFileType = wrapper.application;
+			includeInIndex = 0;
+			path = LegacyRelay.app;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+
+        AAEE51001B10000000000001 /* file:BuildScripts/Build-Xcode.sh */ = {
+            isa = PBXFileReference;
+            lastKnownFileType = text.script.sh;
+            path = Build-Xcode.sh;
+            sourceTree = "<group>";
+        };
+        AAEE51001B10000000000002 /* file:BuildScripts/Embed-Runtime.sh */ = {
+            isa = PBXFileReference;
+            lastKnownFileType = text.script.sh;
+            path = Embed-Runtime.sh;
+            sourceTree = "<group>";
+        };
+        AAEE51001B10000000000003 /* file:Build.command */ = {
+            isa = PBXFileReference;
+            lastKnownFileType = text.script.sh;
+            path = Build.command;
+            sourceTree = "<group>";
+        };
+        AAEE51001B10000000000004 /* file:Configurations/TrollStore.entitlements */ = {
+            isa = PBXFileReference;
+            lastKnownFileType = text.plist.xml;
+            path = TrollStore.entitlements;
+            sourceTree = "<group>";
+        };
+		A6B341D2551C9E20B34F0201 /* Reynard sources (folder) */ = {
+			isa = PBXFileReference;
+			lastKnownFileType = folder;
+			name = "Reynard Source";
+			path = Reynard;
+			sourceTree = "<group>";
+		};
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		DD6A065A1AD301CCF6048921 /* group:Sources */ = {
+			isa = PBXGroup;
+			children = (
+				29431357BB91656BFB39F2C2,
+				5F81C34BA0632B306E90FD1D,
+				C2BAD79DB52CB79BFC00C797,
+				D57F96668D807C721ABC8685,
+				229E61CE383BCCB0B362C832,
+				A728A305F4394300B59D0D23,
+				F4C79AB1A754C6B00F0A6537,
+				AEB9CD235CFBBF33F68A9F99,
+				5F3E4CDC200A614ECF8D1933,
+				F2362E52C490CBF9F77D5580,
+			);
+			path = Sources;
+			sourceTree = "<group>";
+		};
+		73D1D796E321FEBA51817D7B /* group:TrollStore */ = {
+			isa = PBXGroup;
+			children = (
+				8368A99628FD0AB7A6FCBBBC,
+				FF5D918AAFFD808295FC1A01,
+				7D40EC1909959644AFBFD3B9,
+			);
+			name = "TrollStore Overrides";
+			path = Variants/TrollStore;
+			sourceTree = "<group>";
+		};
+		85F8CC575F5118C62ABF8208 /* group:Bridges */ = {
+			isa = PBXGroup;
+			children = (
+				7615259CB2FF0396A112CFBB,
+				4BCD707CD14354D864442E56,
+			);
+			path = Bridges;
+			sourceTree = "<group>";
+		};
+		FDEDE1A5BBECC69C10AB1AE2 /* group:Resources */ = {
+			isa = PBXGroup;
+			children = (
+                A11C00000000000000000011,
+                A11C00000000000000000012,
+				D84CB8818D86AEFA640D3835,
+				9DE218721A4A20A612880E70,
+				896C485C73258D2C3CF30269,
+				741EF6081EB8F99B01FAD1F7,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		4124AD4F3D5130F052CF219C /* group:Configs */ = {
+			isa = PBXGroup;
+			children = (
+				75EA21BC84E80D3C571A6DDA,
+				176D22E70205AFB25FFE4106,
+				F079DC85BAECC2DC2594425D,
+				AAEE51001B10000000000004,
+			);
+			name = Configurations;
+			path = Configurations;
+			sourceTree = "<group>";
+		};
+		B34BAB07AF243F71930C7AE3 /* group:BuildScripts */ = {
+			isa = PBXGroup;
+			children = (
+				8ADBD3F4D56EAF0378C68C3F,
+				AAEE51001B10000000000001,
+				AAEE51001B10000000000002,
+			);
+			path = BuildScripts;
+			sourceTree = "<group>";
+		};
+		ACF9DEF6A5B9F3B09394E6CA /* group:JITInclude */ = {
+			isa = PBXGroup;
+			children = (
+				81DA07A1988D96F7F6260ED7,
+			);
+			name = "JITInclude / xpc";
+			path = JITInclude/xpc;
+			sourceTree = "<group>";
+		};
+		1DC467A731CE5CA0D326F113 /* group:BuildSupport */ = {
+			isa = PBXGroup;
+			children = (
+				ACF9DEF6A5B9F3B09394E6CA,
+			);
+			path = BuildSupport;
+			sourceTree = "<group>";
+		};
+		E39B292CD726C7BA060B5AC0 /* group:External */ = {
+			isa = PBXGroup;
+			children = (
+				F604BEFA4DFA56561DA4E488,
+				DDE46E7FF1D7CAA511B2A87A,
+				A6B341D2551C9E20B34F0201,
+			);
+			name = "External (local inputs)";
+			path = External;
+			sourceTree = "<group>";
+		};
+		777DF7A0D123CBA8BCE8FB76 /* group:Licenses */ = {
+			isa = PBXGroup;
+			children = (
+				6E3C7BB333FCB7D303D99C6B,
+				06BF212BCFBD74799C6AA05D,
+				DAB4331FE1FBE61D30E4CD2D,
+			);
+			path = LICENSES;
+			sourceTree = "<group>";
+		};
+		DA64642F5FA9BB481BEFCE11 /* group:Docs */ = {
+			isa = PBXGroup;
+			children = (
+				0ED8091B593F473B689FCFD1,
+				9AF4AA4F2E7ECC2C264AF5A6,
+				7236CA1B9E6AD3673687FB3B,
+				777DF7A0D123CBA8BCE8FB76,
+			);
+			name = Documentation;
+			sourceTree = "<group>";
+		};
+		4DC76E4D0380CFA69B06558F /* group:Products */ = {
+			isa = PBXGroup;
+			children = (
+				994EBBD5090660A4A95D96F2,
+				BDDB9B208E96070E06DDC156,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		2C15266A9893287784A76948 /* group:Main */ = {
+			isa = PBXGroup;
+			children = (
+				5369C7CD3AA2362F13106E33,
+				AAEE51001B10000000000003,
+				DD6A065A1AD301CCF6048921,
+				73D1D796E321FEBA51817D7B,
+				85F8CC575F5118C62ABF8208,
+				FDEDE1A5BBECC69C10AB1AE2,
+				4124AD4F3D5130F052CF219C,
+				B34BAB07AF243F71930C7AE3,
+				1DC467A731CE5CA0D326F113,
+				E39B292CD726C7BA060B5AC0,
+				DA64642F5FA9BB481BEFCE11,
+				4DC76E4D0380CFA69B06558F,
+			);
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		A05000EB70353B1747D6C86B /* target:Sideload */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 80E0661269DD49E7D8736253;
+			buildPhases = (
+				020DC164CB2553C104F3B740,
+				839D2EAACE255BB782E737B2,
+				A3EA55FDE8AEEBE3E180E582,
+				AAEE51001B20000000000001,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = LegacyRelay-Sideload;
+			productName = LegacyRelay;
+			productReference = 994EBBD5090660A4A95D96F2;
+			productType = com.apple.product-type.application;
+		};
+		26026E4F7AA25430ABB18AE1 /* target:TrollStore */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 2D912648319CA9BEFD695F68;
+			buildPhases = (
+				52BEE8BD290DD1C1EB8784A5,
+				052E4E13F08B803410CE9D2D,
+				CC8A5157A17B4F125AFA8BC4,
+				AAEE51001B20000000000002,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = LegacyRelay-TrollStore;
+			productName = LegacyRelay;
+			productReference = BDDB9B208E96070E06DDC156;
+			productType = com.apple.product-type.application;
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		B5D1158E90259540C2AD9A80 /* project:root */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastSwiftUpdateCheck = 1340;
+				LastUpgradeCheck = 1340;
+				TargetAttributes = {
+					A05000EB70353B1747D6C86B = {
+						CreatedOnToolsVersion = 13.4.1;
+						LastSwiftMigration = 1340;
+						ProvisioningStyle = Manual;
+					};
+					26026E4F7AA25430ABB18AE1 = {
+						CreatedOnToolsVersion = 13.4.1;
+						LastSwiftMigration = 1340;
+						ProvisioningStyle = Manual;
+					};
+				};
+			};
+			buildConfigurationList = 935F8E58B72512D618C46EE8;
+			compatibilityVersion = "Xcode 13.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 2C15266A9893287784A76948;
+			productRefGroup = 4DC76E4D0380CFA69B06558F;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				A05000EB70353B1747D6C86B,
+				26026E4F7AA25430ABB18AE1,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		A3EA55FDE8AEEBE3E180E582 /* phase:resources:Sideload */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+                28921BC862479558EF5E1883,
+                A11C00000000000000000001,
+                A11C00000000000000000002,
+				1780997E60D4B940563E0E79,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CC8A5157A17B4F125AFA8BC4 /* phase:resources:TrollStore */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+                5731389E6B9C0BCB9811AE80,
+                A11C00000000000000000003,
+                A11C00000000000000000004,
+				C71B1D271E60A0D1D458A68A,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		020DC164CB2553C104F3B740 /* phase:preflight:Sideload */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Verify local Gecko/JIT dependencies";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PROJECT_DIR}/BuildScripts/Check-Xcode-Inputs.sh\"";
+		};
+		52BEE8BD290DD1C1EB8784A5 /* phase:preflight:TrollStore */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Verify local Gecko/JIT dependencies";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PROJECT_DIR}/BuildScripts/Check-Xcode-Inputs.sh\"";
+		};
+
+        AAEE51001B20000000000001 /* phase:embed-runtime:Sideload */ = {
+            isa = PBXShellScriptBuildPhase;
+            alwaysOutOfDate = 1;
+            buildActionMask = 2147483647;
+            files = ();
+            inputPaths = ();
+            name = "Embed matching Gecko and helper";
+            outputPaths = ();
+            runOnlyForDeploymentPostprocessing = 0;
+            shellPath = /bin/sh;
+            shellScript = "\"${PROJECT_DIR}/BuildScripts/Embed-Runtime.sh\"";
+        };
+        AAEE51001B20000000000002 /* phase:embed-runtime:TrollStore */ = {
+            isa = PBXShellScriptBuildPhase;
+            alwaysOutOfDate = 1;
+            buildActionMask = 2147483647;
+            files = ();
+            inputPaths = ();
+            name = "Embed matching Gecko and helper";
+            outputPaths = ();
+            runOnlyForDeploymentPostprocessing = 0;
+            shellPath = /bin/sh;
+            shellScript = "\"${PROJECT_DIR}/BuildScripts/Embed-Runtime.sh\"";
+        };
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		839D2EAACE255BB782E737B2 /* phase:sources:Sideload */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A7BF67DD508739F719CEA084,
+				42642EC65D0F3578A30E495E,
+				1AF0E3A256D1E74A64249226,
+				CB97D9E3A40672DD8118512D,
+				902A172326F05765C87602DC,
+				EB1121FDB5D417E3D22E19D3,
+				7B09485FEF4F7692141E0B7E,
+				B4BC42FEF20F4C338051D82A,
+				0FAB95893C4411B4B0165B53,
+				ECB0262374516170915B062D,
+				23DAF0BE3E957B2C3747970C,
+				C35119744EA81ADC2E8CB62D,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		052E4E13F08B803410CE9D2D /* phase:sources:TrollStore */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				23CFC19BC68FA11260D4C538,
+				A81E8F545014514E4B17EADD,
+				DB5FD8A648EF953273D6504E,
+				A8CD67ACAC7D94679527F6EB,
+				708AE57D2D1B3C3732153DBD,
+				4309B74E1C1C71DB7B0A2BAE,
+				78A1EAD618873172DE7C15EB,
+				BA096F918C0468E19E57EF63,
+				763839DF8DD96AF162947D56,
+				B947756FC16A37BB6C73ACED,
+				9DAC26A97BF305CE15023DEF,
+				AFD820CC2CB3643DA9CBDF4F,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		B4BEFDC1197E346881B57288 /* config:Sideload:Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 176D22E70205AFB25FFE4106;
+			buildSettings = {
+				CONFIGURATION_BUILD_DIR = "$(BUILD_DIR)/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)/$(TARGET_NAME)";
+				SWIFT_OPTIMIZATION_LEVEL = -Onone;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_TESTABILITY = YES;
+				SWIFT_COMPILATION_MODE = singlefile;
+			};
+			name = Debug;
+		};
+		B087A4F286E1CAEEE1825792 /* config:Sideload:Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 176D22E70205AFB25FFE4106;
+			buildSettings = {
+				CONFIGURATION_BUILD_DIR = "$(BUILD_DIR)/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)/$(TARGET_NAME)";
+				SWIFT_OPTIMIZATION_LEVEL = -O;
+				GCC_OPTIMIZATION_LEVEL = s;
+				DEBUG_INFORMATION_FORMAT = dwarf-with-dsym;
+				ENABLE_TESTABILITY = NO;
+				SWIFT_COMPILATION_MODE = wholemodule;
+			};
+			name = Release;
+		};
+		12AF79F75BF1CBFCEBE05431 /* config:TrollStore:Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = F079DC85BAECC2DC2594425D;
+			buildSettings = {
+				CONFIGURATION_BUILD_DIR = "$(BUILD_DIR)/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)/$(TARGET_NAME)";
+				SWIFT_OPTIMIZATION_LEVEL = -Onone;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_TESTABILITY = YES;
+				SWIFT_COMPILATION_MODE = singlefile;
+			};
+			name = Debug;
+		};
+		AB459857636110682CB147DE /* config:TrollStore:Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = F079DC85BAECC2DC2594425D;
+			buildSettings = {
+				CONFIGURATION_BUILD_DIR = "$(BUILD_DIR)/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)/$(TARGET_NAME)";
+				SWIFT_OPTIMIZATION_LEVEL = -O;
+				GCC_OPTIMIZATION_LEVEL = s;
+				DEBUG_INFORMATION_FORMAT = dwarf-with-dsym;
+				ENABLE_TESTABILITY = NO;
+				SWIFT_COMPILATION_MODE = wholemodule;
+			};
+			name = Release;
+		};
+		F4EBC2D2DDA866C46FFCB97F /* config:project:Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
+				SWIFT_VERSION = 5.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				CODE_SIGNING_ALLOWED = NO;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				ENABLE_BITCODE = NO;
+			};
+			name = Debug;
+		};
+		038C7CFD54A6206390669599 /* config:project:Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
+				SWIFT_VERSION = 5.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				CODE_SIGNING_ALLOWED = NO;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "";
+				ENABLE_BITCODE = NO;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		80E0661269DD49E7D8736253 /* configlist:Sideload */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B4BEFDC1197E346881B57288,
+				B087A4F286E1CAEEE1825792,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		2D912648319CA9BEFD695F68 /* configlist:TrollStore */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				12AF79F75BF1CBFCEBE05431,
+				AB459857636110682CB147DE,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		935F8E58B72512D618C46EE8 /* configlist:project */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F4EBC2D2DDA866C46FFCB97F,
+				038C7CFD54A6206390669599,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = B5D1158E90259540C2AD9A80 /* Project object */;
+}

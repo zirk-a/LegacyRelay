@@ -1,0 +1,26 @@
+IPHONEOS_DEPLOYMENT_TARGET = 13.0
+SDKROOT = iphoneos
+SUPPORTED_PLATFORMS = iphoneos iphoneosimulator
+TARGETED_DEVICE_FAMILY = 1,2
+SWIFT_VERSION = 5.0
+CLANG_ENABLE_OBJC_ARC = YES
+ENABLE_BITCODE = NO
+GENERATE_INFOPLIST_FILE = NO
+INFOPLIST_FILE = $(PROJECT_DIR)/Info.plist
+PRODUCT_NAME = LegacyRelay
+PRODUCT_BUNDLE_IDENTIFIER = com.legacyrelay.app
+CODE_SIGNING_ALLOWED = NO
+CODE_SIGN_STYLE = Manual
+CODE_SIGN_IDENTITY =
+SWIFT_EMIT_LOC_STRINGS = NO
+ENABLE_USER_SCRIPT_SANDBOXING = NO
+GCC_PREPROCESSOR_DEFINITIONS = $(inherited)
+ONLY_ACTIVE_ARCH = YES
+ARCHS = arm64
+VALID_ARCHS = arm64
+FRAMEWORK_SEARCH_PATHS = $(inherited) $(PROJECT_DIR)/External/Engine/Frameworks
+LIBRARY_SEARCH_PATHS = $(inherited) $(PROJECT_DIR)/External/Engine/Frameworks $(PROJECT_DIR)/External/RPPairing
+HEADER_SEARCH_PATHS = $(inherited) $(PROJECT_DIR)/BuildSupport/JITInclude $(PROJECT_DIR)/External/CompatInclude $(PROJECT_DIR)/External/GeckoHeaders $(PROJECT_DIR)/External/Engine/Frameworks/GeckoView.framework/Headers $(PROJECT_DIR)/External/Reynard/browser/Reynard/JIT
+OTHER_SWIFT_FLAGS = $(inherited) -Xcc -I$(PROJECT_DIR)/BuildSupport/JITInclude -Xcc -I$(PROJECT_DIR)/External/CompatInclude -Xcc -Wno-error=non-modular-include-in-framework-module
+LD_RUNPATH_SEARCH_PATHS = $(inherited) @executable_path/Frameworks
+OTHER_LDFLAGS = $(inherited) -framework Foundation -framework UIKit -framework WebKit -framework CoreFoundation -framework Security -framework GeckoView -lmozglue -lnss3 -lfreebl3 -lsoftokn3 -llgpllibs -lmozavcodec -lmozavutil -lgkcodecs -lmozinference -Xlinker $(PROJECT_DIR)/External/Engine/Frameworks/XUL -liconv -lsqlite3

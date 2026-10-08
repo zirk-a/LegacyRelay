@@ -1,0 +1,151 @@
+diff --git a/dom/ipc/BrowserParent.cpp b/dom/ipc/BrowserParent.cpp
+index 7661a1e0bfbf..e2bc69e3f076 100644
+--- a/dom/ipc/BrowserParent.cpp
++++ b/dom/ipc/BrowserParent.cpp
+@@ -142,6 +142,10 @@
+ #  include "FxRWindowManager.h"
+ #endif
+ 
++#ifdef XP_IOS
++#  include "mozilla/widget/BackgroundColor.h"
++#endif
++
+ #if defined(XP_WIN) && defined(ACCESSIBILITY)
+ #  include "mozilla/a11y/AccessibleWrap.h"
+ #  include "mozilla/a11y/Compatibility.h"
+@@ -791,6 +795,21 @@ mozilla::ipc::IPCResult BrowserParent::RecvEnsureLayersConnected(
+     Maybe<CompositorOptions>* aCompositorOptions) {
+   if (mRemoteLayerTreeOwner.IsInitialized()) {
+     mRemoteLayerTreeOwner.EnsureLayersConnected(*aCompositorOptions);
++
++#if defined(MOZ_WIDGET_UIKIT)
++    // After compositor recovery, invalidate the embedding subdocument
++    // frame so the root WR bridge rebuilds its first display list with the
++    // reattached remote tab.
++    if (aCompositorOptions->isSome()) {
++      RefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
++      if (frameLoader) {
++        nsIFrame* frame = frameLoader->GetPrimaryFrameOfOwningContent();
++        if (frame) {
++          frame->InvalidateFrame();
++        }
++      }
++    }
++#endif
+   }
+   return IPC_OK();
+ }
+@@ -1033,14 +1052,21 @@ void BrowserParent::InitRendering() {
+         widget->SupportsUnadjustedMovement());
+   }
+ 
+-#if defined(MOZ_WIDGET_ANDROID)
++#if defined(MOZ_WIDGET_ANDROID) || defined(MOZ_WIDGET_UIKIT)
+   MOZ_ASSERT(widget);
+ 
+   if (GetBrowsingContext()->IsTopContent()) {
+     (void)SendDynamicToolbarMaxHeightChanged(
+-        widget->GetDynamicToolbarMaxHeight());
++        widget->GetDynamicToolbarMaxHeight(),
++        widget->GetDynamicToolbarMinHeight());
++  }
++
++#ifdef XP_IOS
++  if (mBackgroundColor) {
++    mozilla::widget::DispatchBackgroundColor(widget, *mBackgroundColor);
+   }
+ #endif
++#endif
+ }
+ 
+ bool BrowserParent::AttachWindowRenderer() {
+@@ -1206,7 +1232,10 @@ void BrowserParent::SizeModeChanged(const nsSizeMode& aSizeMode) {
+ 
+ void BrowserParent::DynamicToolbarMaxHeightChanged(ScreenIntCoord aHeight) {
+   if (!mIsDestroyed) {
+-    (void)SendDynamicToolbarMaxHeightChanged(aHeight);
++    nsCOMPtr<nsIWidget> widget = GetWidget();
++    (void)SendDynamicToolbarMaxHeightChanged(
++        aHeight,
++        widget ? widget->GetDynamicToolbarMinHeight() : ScreenIntCoord(0));
+   }
+ }
+ 
+@@ -2399,6 +2428,16 @@ mozilla::ipc::IPCResult BrowserParent::RecvSetCursor(
+   return IPC_OK();
+ }
+ 
++mozilla::ipc::IPCResult BrowserParent::RecvUpdateBackgroundColor(
++    const nscolor& aColor) {
++#ifdef XP_IOS
++  mBackgroundColor = Some(aColor);
++  nsCOMPtr<nsIWidget> widget = GetWidget();
++  mozilla::widget::DispatchBackgroundColor(widget, aColor);
++#endif
++  return IPC_OK();
++}
++
+ mozilla::ipc::IPCResult BrowserParent::RecvSetLinkStatus(
+     const nsString& aStatus) {
+   nsCOMPtr<nsIXULBrowserWindow> xulBrowserWindow = GetXULBrowserWindow();
+@@ -2549,14 +2588,22 @@ mozilla::ipc::IPCResult BrowserParent::RecvNotifyIMEPositionChange(
+     const ContentCache& aContentCache,
+     const IMENotification& aIMENotification) {
+   nsCOMPtr<nsIWidget> widget = GetTextInputHandlingWidget();
+-  if (!widget || !IMEStateManager::DoesBrowserParentHaveIMEFocus(this)) {
++  if (!widget) {
+     return IPC_OK();
+   }
+   if (NS_WARN_IF(!aContentCache.IsValid())) {
+     return IPC_FAIL(this, "Invalid content cache data");
+   }
+-  mContentCache.AssignContent(aContentCache, widget, &aIMENotification);
+-  mContentCache.MaybeNotifyIME(widget, aIMENotification);
++  if (IMEStateManager::DoesBrowserParentHaveIMEFocus(this)) {
++    mContentCache.AssignContent(aContentCache, widget, &aIMENotification);
++    mContentCache.MaybeNotifyIME(widget, aIMENotification);
++  } else {
++    // During APZ scroll, BrowserParent temporarily loses IME focus.
++    // Still update the cache and notify the widget directly so that
++    // UIKit gets updated caret/selection geometry during scrolling.
++    mContentCache.AssignContent(aContentCache, widget);
++    widget->NotifyIME(aIMENotification);
++  }
+   return IPC_OK();
+ }
+ 
+@@ -3218,18 +3265,31 @@ bool BrowserParent::HandleQueryContentEvent(WidgetQueryContentEvent& aEvent) {
+       NS_WARN_IF(aEvent.Failed())) {
+     return true;
+   }
++  nsCOMPtr<nsIWidget> browserWidget = GetWidget();
++  const LayoutDeviceIntPoint textInputWidgetOffset =
++      browserWidget != textInputHandlingWidget
++          ? nsLayoutUtils::WidgetToWidgetOffset(browserWidget,
++                                                textInputHandlingWidget)
++          : LayoutDeviceIntPoint();
+   switch (aEvent.mMessage) {
+     case eQueryTextRect:
+     case eQueryCaretRect:
+     case eQueryEditorRect: {
+-      nsCOMPtr<nsIWidget> browserWidget = GetWidget();
+       if (browserWidget != textInputHandlingWidget) {
+-        aEvent.mReply->mRect += nsLayoutUtils::WidgetToWidgetOffset(
+-            browserWidget, textInputHandlingWidget);
++        aEvent.mReply->mRect += textInputWidgetOffset;
+       }
+       aEvent.mReply->mRect = TransformChildToParent(aEvent.mReply->mRect);
+       break;
+     }
++    case eQueryTextRectArray: {
++      for (LayoutDeviceIntRect& rect : aEvent.mReply->mRectArray) {
++        if (browserWidget != textInputHandlingWidget) {
++          rect += textInputWidgetOffset;
++        }
++        rect = TransformChildToParent(rect);
++      }
++      break;
++    }
+     default:
+       break;
+   }

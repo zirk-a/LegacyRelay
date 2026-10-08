@@ -1,0 +1,202 @@
+diff --git a/gfx/thebes/CoreTextFontList.cpp b/gfx/thebes/CoreTextFontList.cpp
+index b6696c70c4b9..fa5d2bb2288b 100644
+--- a/gfx/thebes/CoreTextFontList.cpp
++++ b/gfx/thebes/CoreTextFontList.cpp
+@@ -351,6 +351,12 @@ nsresult CTFontEntry::ReadCMAP(FontInfoData* aFontInfoData) {
+   } else {
+     // if error occurred, initialize to null cmap
+     charmap = new gfxCharacterMap(0);
++    if (!mIsDataUserFont) {
++      // If cmap access is unavailable on iOS system fonts, force
++      // CoreText shaping for this face instead of HarfBuzz table-driven
++      // shaping.
++      mRequiresAAT = true;
++    }
+   }
+   if (setCharMap) {
+     // Temporarily retain charmap, until the shared version is
+@@ -385,7 +391,13 @@ gfxFont* CTFontEntry::CreateFontInstance(const gfxFontStyle* aFontStyle) {
+       return nullptr;
+     }
+     AutoWriteLock lock(mLock);
+-    unscaledFont = new UnscaledFontMac(baseFont, mIsDataUserFont);
++    if (mFontDesc) {
++      unscaledFont =
++          new UnscaledFontMac(mFontDesc, baseFont, mIsDataUserFont,
++                              mDescriptorProvenance, mSystemFontTraits);
++    } else {
++      unscaledFont = new UnscaledFontMac(baseFont, mIsDataUserFont);
++    }
+     mUnscaledFont = unscaledFont;
+   }
+ 
+@@ -444,6 +456,32 @@ CTFontEntry::CTFontEntry(const nsACString& aPostscriptName, WeightRange aWeight,
+   mOpszAxis.mTag = 0;
+ }
+ 
++CTFontEntry::CTFontEntry(const nsACString& aPostscriptName, CTFontRef aFont,
++                         WeightRange aWeight,
++                         UnscaledFont::DescriptorProvenance aProvenance,
++                         bool aIsStandardFace, double aSizeHint)
++    : gfxFontEntry(aPostscriptName, aIsStandardFace),
++      mFontRef(NULL),
++      mSizeHint(aSizeHint),
++      mFontRefInitialized(false),
++      mRequiresAAT(false),
++      mIsCFF(false),
++      mIsCFFInitialized(false),
++      mHasVariations(false),
++      mHasVariationsInitialized(false),
++      mHasAATSmallCaps(false),
++      mHasAATSmallCapsInitialized(false) {
++  mWeightRange = aWeight;
++  mOpszAxis.mTag = 0;
++
++  mFontDesc = CTFontCopyFontDescriptor(aFont);
++  mCharacterSet = CTFontCopyCharacterSet(aFont);
++  mFontRef = CTFontCopyGraphicsFont(aFont, nullptr);
++  mFontRefInitialized = mFontRef != nullptr;
++  mDescriptorProvenance = aProvenance;
++  mSystemFontTraits = CTFontGetSymbolicTraits(aFont);
++}
++
+ CTFontEntry::CTFontEntry(const nsACString& aPostscriptName, CGFontRef aFontRef,
+                          WeightRange aWeight, WidthRange aWidth,
+                          SlantStyleRange aStyle, bool aIsDataUserFont,
+@@ -481,6 +519,17 @@ gfxFontEntry* CTFontEntry::Clone() const {
+   fe->mStyleRange = mStyleRange;
+   fe->mWidthRange = mWidthRange;
+   fe->mFixedPitch = mFixedPitch;
++  // Preserve the retained CoreText descriptor when cloning a system
++  // font entry so descriptor-based recreation stays available.
++  if (mFontDesc) {
++    fe->mFontDesc = static_cast<CTFontDescriptorRef>(::CFRetain(mFontDesc));
++  }
++  if (mCharacterSet) {
++    fe->mCharacterSet =
++        static_cast<CFCharacterSetRef>(::CFRetain(mCharacterSet));
++  }
++  fe->mDescriptorProvenance = mDescriptorProvenance;
++  fe->mSystemFontTraits = mSystemFontTraits;
+   return fe;
+ }
+ 
+@@ -552,6 +601,12 @@ void CTFontEntry::InitSkrifaFontFace() {
+ }
+ #endif
+ 
++bool CTFontEntry::TestCharacterMap(uint32_t aCh) {
++  return gfxFontEntry::TestCharacterMap(aCh) ||
++         (mCharacterSet &&
++          CFCharacterSetIsLongCharacterMember(mCharacterSet, aCh));
++}
++
+ CGFontRef CTFontEntry::GetFontRef() {
+   {
+     AutoReadLock lock(mLock);
+@@ -986,7 +1041,7 @@ void CTFontFamily::FindStyleVariationsLocked(FontInfoData* aFontInfoData) {
+   AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING("CTFontFamily::FindStyleVariations",
+                                         LAYOUT, mName);
+ 
+-  if (mForSystemFont) {
++  if (mSeedFont) {
+     MOZ_ASSERT(gfxPlatform::HasVariationFontSupport());
+ 
+     auto addToFamily = [&](CTFontRef aFont) MOZ_REQUIRES(mLock) {
+@@ -996,8 +1051,14 @@ void CTFontFamily::FindStyleVariationsLocked(FontInfoData* aFontInfoData) {
+       GetStringForCFString(psName, nameUTF16);
+       CopyUTF16toUTF8(nameUTF16, nameUTF8);
+ 
++#ifdef MOZ_WIDGET_UIKIT
++      auto* fe =
++          new CTFontEntry(nameUTF8, aFont, WeightRange(FontWeight::NORMAL),
++                          mDescriptorProvenance, true, 0.0);
++#else
+       auto* fe =
+           new CTFontEntry(nameUTF8, WeightRange(FontWeight::NORMAL), true, 0.0);
++#endif
+ 
+       // Set the appropriate style, assuming it may not have a variation range.
+       CTFontSymbolicTraits traits = CTFontGetSymbolicTraits(aFont);
+@@ -1010,17 +1071,20 @@ void CTFontFamily::FindStyleVariationsLocked(FontInfoData* aFontInfoData) {
+       AddFontEntryLocked(fe);
+     };
+ 
+-    addToFamily(mForSystemFont);
++    addToFamily(mSeedFont);
+ 
+-    // See if there is a corresponding italic face, and add it to the family.
+-    AutoCFTypeRef<CTFontRef> italicFont(CTFontCreateCopyWithSymbolicTraits(
+-        mForSystemFont, 0.0, nullptr, kCTFontTraitItalic, kCTFontTraitItalic));
+-    if (italicFont != mForSystemFont) {
+-      addToFamily(italicFont);
++    if (mDescriptorProvenance == UnscaledFont::DescriptorProvenance::SystemUI ||
++        mDescriptorProvenance ==
++            UnscaledFont::DescriptorProvenance::SystemUISerif) {
++      AutoCFTypeRef<CTFontRef> italicFont(CTFontCreateCopyWithSymbolicTraits(
++          mSeedFont, 0.0, nullptr, kCTFontTraitItalic, kCTFontTraitItalic));
++      if (italicFont != mSeedFont) {
++        addToFamily(italicFont);
++      }
+     }
+ 
+-    CFRelease(mForSystemFont);
+-    mForSystemFont = nullptr;
++    CFRelease(mSeedFont);
++    mSeedFont = nullptr;
+ 
+     SetHasStyles(true);
+ 
+@@ -1473,6 +1537,22 @@ gfxFontEntry* CoreTextFontList::PlatformGlobalFontFallback(
+           }
+         }
+       }
++
++      if (!fontEntry) {
++        RefPtr<gfxFontFamily> family =
++            new CTFontFamily(familyNameString, fallback,
++                             UnscaledFont::DescriptorProvenance::NativeFace);
++        nsAutoCString key;
++        GenerateFontListKey(familyNameString, key);
++        fontEntry = family->FindFontForStyle(*aMatchStyle);
++        if (fontEntry && fontEntry->HasCharacter(aCh)) {
++          mFontFamilies.InsertOrUpdate(key, family);
++          aMatchedFamily = FontFamily(family);
++          cantUseFallbackFont = false;
++        } else {
++          fontEntry = nullptr;
++        }
++      }
+     }
+   }
+ 
+@@ -1967,7 +2047,9 @@ void CoreTextFontList::InitSystemFontNames() {
+   // shared fontlist to manage "normal" fonts, because the hidden system fonts
+   // may be excluded from the font list altogether. This family will be
+   // populated based on the given NSFont.
+-  RefPtr<gfxFontFamily> fam = new CTFontFamily(mSystemFontFamilyName, font);
++  RefPtr<gfxFontFamily> fam =
++      new CTFontFamily(mSystemFontFamilyName, font,
++                       UnscaledFont::DescriptorProvenance::SystemUI);
+   if (fam) {
+     nsAutoCString key;
+     GenerateFontListKey(mSystemFontFamilyName, key);
+@@ -1978,14 +2060,10 @@ void CoreTextFontList::InitSystemFontNames() {
+ FontFamily CoreTextFontList::GetDefaultFontForPlatform(
+     FontVisibilityProvider* aFontVisibilityProvider, const gfxFontStyle* aStyle,
+     nsAtom* aLanguage) {
+-  AutoCFTypeRef<CTFontRef> font(CTFontCreateUIFontForLanguage(
+-      kCTFontUIFontUser, 0.0, nullptr));  // TODO: language
+-  AutoCFTypeRef<CFStringRef> name(CTFontCopyFamilyName(font));
+-
+-  nsAutoString familyName;
+-  GetStringForCFString(name, familyName);
+-
+-  return FindFamily(aFontVisibilityProvider, NS_ConvertUTF16toUTF8(familyName));
++  if (auto* systemFamily = FindSystemFontFamily(mSystemFontFamilyName)) {
++    return FontFamily(systemFamily);
++  }
++  return FontFamily();
+ }
+ 
+ #ifdef MOZ_BUNDLED_FONTS

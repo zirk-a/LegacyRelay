@@ -1,0 +1,50 @@
+diff --git a/js/src/jit/Ion.cpp b/js/src/jit/Ion.cpp
+index 47dd2fff31fb..c9b3aea6ec51 100644
+--- a/js/src/jit/Ion.cpp
++++ b/js/src/jit/Ion.cpp
+@@ -45,6 +45,7 @@
+ #include "jit/LIR.h"
+ #include "jit/Lowering.h"
+ #include "jit/PerfSpewer.h"
++#include "jit/ProcessExecutableMemory.h"
+ #include "jit/RangeAnalysis.h"
+ #include "jit/ScalarReplacement.h"
+ #include "jit/ScriptFromCalleeToken.h"
+@@ -151,7 +152,11 @@ bool JitRuntime::initialize(JSContext* cx) {
+ 
+ bool JitRuntime::generateTrampolines(JSContext* cx) {
+   TempAllocator temp(&cx->tempLifoAlloc());
+-  StackMacroAssembler masm(cx, temp);
++  auto masmStorage = MakeUnique<StackMacroAssembler>(cx, temp);
++  if (!masmStorage) {
++    return false;
++  }
++  StackMacroAssembler& masm = *masmStorage;
+   PerfSpewerRangeRecorder rangeRecorder(masm);
+ 
+   Label bailoutTail;
+@@ -608,16 +613,21 @@ template JitCode* JitCode::New<NoGC>(JSContext* cx, uint8_t* code,
+ void JitCode::copyFrom(MacroAssembler& masm) {
+   // Store the JitCode pointer in the JitCodeHeader so we can recover the
+   // gcthing from relocation tables.
+-  JitCodeHeader::FromExecutable(raw())->init(this);
++    uint8_t* writableAllocation =
++      WritableJitAllocationFromExecutable(allocatedMemory(), allocatedSize());
++    uint8_t* writableRaw = writableAllocation + headerSize_;
++    JitCodeHeader::FromExecutable(writableRaw)->init(this);
+ 
+   insnSize_ = masm.instructionsSize();
+   masm.executableCopy(raw());
+ 
+   jumpRelocTableBytes_ = masm.jumpRelocationTableBytes();
+-  masm.copyJumpRelocationTable(raw() + jumpRelocTableOffset());
++    masm.copyJumpRelocationTable(WritableJitAllocationFromExecutable(
++      raw() + jumpRelocTableOffset(), jumpRelocTableBytes_));
+ 
+   dataRelocTableBytes_ = masm.dataRelocationTableBytes();
+-  masm.copyDataRelocationTable(raw() + dataRelocTableOffset());
++    masm.copyDataRelocationTable(WritableJitAllocationFromExecutable(
++      raw() + dataRelocTableOffset(), dataRelocTableBytes_));
+ 
+   masm.processCodeLabels(raw());
+ }

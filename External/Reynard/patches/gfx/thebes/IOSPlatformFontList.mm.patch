@@ -1,0 +1,101 @@
+diff --git a/gfx/thebes/IOSPlatformFontList.mm b/gfx/thebes/IOSPlatformFontList.mm
+index b44b28d1d070..de426e34db0f 100644
+--- a/gfx/thebes/IOSPlatformFontList.mm
++++ b/gfx/thebes/IOSPlatformFontList.mm
+@@ -4,15 +4,94 @@
+ 
+ #include "IOSPlatformFontList.h"
+ #import <UIKit/UIKit.h>
++#include "mozilla/FontPropertyTypes.h"
+ 
+-IOSPlatformFontList::IOSPlatformFontList() : CoreTextFontList() {}
++static const char kNewYorkFontFamilyName[] = "-apple-system-ui-serif";
++
++IOSPlatformFontList::IOSPlatformFontList() : CoreTextFontList() {
++  UIFontDescriptor* descriptor = [[UIFont systemFontOfSize:17.0].fontDescriptor
++      fontDescriptorWithDesign:UIFontDescriptorSystemDesignSerif];
++  if (descriptor) {
++    UIFont* font = [UIFont fontWithDescriptor:descriptor size:17.0];
++    mNewYorkFontFamily = new CTFontFamily(
++        nsDependentCString(kNewYorkFontFamilyName), (__bridge CTFontRef)font,
++        mozilla::gfx::UnscaledFont::DescriptorProvenance::SystemUISerif);
++  }
++}
+ 
+ IOSPlatformFontList::~IOSPlatformFontList() {}
+ 
++static UIFont* GetUIFontForSystemFontID(
++    mozilla::LookAndFeel::FontID aSystemFontID) {
++  switch (aSystemFontID) {
++    case mozilla::LookAndFeel::FontID::SmallCaption:
++      return [UIFont boldSystemFontOfSize:12.0];
++
++    case mozilla::LookAndFeel::FontID::MessageBox:
++    case mozilla::LookAndFeel::FontID::MozList:
++    case mozilla::LookAndFeel::FontID::MozField:
++    case mozilla::LookAndFeel::FontID::MozButton:
++      return [UIFont systemFontOfSize:13.0];
++
++    case mozilla::LookAndFeel::FontID::StatusBar:
++      return [UIFont systemFontOfSize:17.0];
++
++    case mozilla::LookAndFeel::FontID::Icon:
++    case mozilla::LookAndFeel::FontID::Caption:
++    case mozilla::LookAndFeel::FontID::Menu:
++    case mozilla::LookAndFeel::FontID::MozPullDownMenu:
++    default:
++      return [UIFont systemFontOfSize:14.0];
++  }
++}
++
++static void FillStyleFromUIFont(UIFont* aFont, gfxFontStyle& aFontStyle) {
++  UIFontDescriptor* descriptor = aFont.fontDescriptor;
++  UIFontDescriptorSymbolicTraits traits = descriptor.symbolicTraits;
++  NSDictionary<UIFontDescriptorTraitKey, id>* traitValues =
++      [descriptor objectForKey:UIFontDescriptorTraitsAttribute];
++  NSNumber* widthTrait = [traitValues objectForKey:UIFontWidthTrait];
++
++  aFontStyle.style = (traits & UIFontDescriptorTraitItalic)
++                         ? mozilla::FontSlantStyle::ITALIC
++                         : mozilla::FontSlantStyle::NORMAL;
++  aFontStyle.weight = (traits & UIFontDescriptorTraitBold)
++                          ? mozilla::FontWeight::BOLD
++                          : mozilla::FontWeight::NORMAL;
++
++  float width = widthTrait ? widthTrait.floatValue : 0.0f;
++  aFontStyle.width = width > 0.1f    ? mozilla::FontWidth::EXPANDED
++                     : width < -0.1f ? mozilla::FontWidth::CONDENSED
++                                     : mozilla::FontWidth::NORMAL;
++  aFontStyle.size = aFont.pointSize;
++  aFontStyle.systemFont = true;
++}
++
+ void IOSPlatformFontList::LookupSystemFont(
+     mozilla::LookAndFeel::FontID aSystemFontID, nsACString& aSystemFontName,
+     gfxFontStyle& aFontStyle) {
+-  MOZ_CRASH("UNIMPLEMENTED");
++  // iOS system font lookup through UIKit and report the family as
++  // -apple-system
++  UIFont* font = GetUIFontForSystemFontID(aSystemFontID);
++  MOZ_ASSERT(font, "system font not set");
++
++  aSystemFontName.AssignASCII("-apple-system");
++  FillStyleFromUIFont(font, aFontStyle);
++}
++
++bool IOSPlatformFontList::FindAndAddFamiliesLocked(
++    FontVisibilityProvider* aFontVisibilityProvider,
++    mozilla::StyleGenericFontFamily aGeneric, const nsACString& aFamily,
++    nsTArray<FamilyAndGeneric>* aOutput, FindFamiliesFlags aFlags,
++    gfxFontStyle* aStyle, nsAtom* aLanguage, gfxFloat aDevToCssSize) {
++  if (aFamily.EqualsLiteral(kNewYorkFontFamilyName) && mNewYorkFontFamily) {
++    aOutput->AppendElement(mNewYorkFontFamily);
++    return true;
++  }
++
++  return CoreTextFontList::FindAndAddFamiliesLocked(
++      aFontVisibilityProvider, aGeneric, aFamily, aOutput, aFlags, aStyle,
++      aLanguage, aDevToCssSize);
+ }
+ 
+ nsTArray<std::pair<const char**, uint32_t>>
