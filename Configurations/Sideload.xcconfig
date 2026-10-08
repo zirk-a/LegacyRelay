@@ -1,0 +1,4 @@
+#include "Shared.xcconfig"
+PRODUCT_BUNDLE_IDENTIFIER = com.legacyrelay.app
+LEGACYRELAY_VARIANT = sideload
+OTHER_LDFLAGS = $(inherited) $(PROJECT_DIR)/External/LinkObjects/JITEnabler.o $(PROJECT_DIR)/External/LinkObjects/JITSupport.o $(PROJECT_DIR)/External/LinkObjects/JITUtils.o $(PROJECT_DIR)/External/LinkObjects/JITErrors.o $(PROJECT_DIR)/External/LinkObjects/Utils.o -L$(PROJECT_DIR)/External/RPPairing -lidevice_ffi

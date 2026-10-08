@@ -1,0 +1,115 @@
+diff --git a/gfx/layers/NativeLayerCA.mm b/gfx/layers/NativeLayerCA.mm
+index 5760a816612b..b7fdf83fc0eb 100644
+--- a/gfx/layers/NativeLayerCA.mm
++++ b/gfx/layers/NativeLayerCA.mm
+@@ -9,6 +9,9 @@
+ #  import <AppKit/NSColor.h>
+ #  import <OpenGL/gl.h>
+ #endif
++#if defined(MOZ_WIDGET_UIKIT)
++#  include <dispatch/dispatch.h>
++#endif
+ #import <AVFoundation/AVFoundation.h>
+ #import <QuartzCore/QuartzCore.h>
+ 
+@@ -244,6 +247,15 @@ static void EmitTelemetryForVideoLowPower(VideoLowPowerType aVideoLowPower) {
+   }
+ }
+ 
++#ifdef XP_IOS
++void NativeLayerRootCA::RetainLayerUntilNextScreenCommit(NativeLayer* aLayer) {
++  MutexAutoLock lock(mMutex);
++  RefPtr<NativeLayerCA> layerCA = aLayer->AsNativeLayerCA();
++  MOZ_RELEASE_ASSERT(layerCA);
++  mLayersRetainedUntilNextScreenCommit.AppendElement(std::move(layerCA));
++}
++#endif
++
+ void NativeLayerRootCA::SetBackingScale(float aBackingScale) {
+   MutexAutoLock lock(mMutex);
+ 
+@@ -275,6 +287,16 @@ static void EmitTelemetryForVideoLowPower(VideoLowPowerType aVideoLowPower) {
+ }
+ 
+ bool NativeLayerRootCA::CommitToScreen() {
++#if defined(MOZ_WIDGET_UIKIT)
++  if (!NS_IsMainThread()) {
++    RefPtr<NativeLayerRootCA> self = this;
++    dispatch_async(dispatch_get_main_queue(), ^{
++      self->CommitToScreen();
++    });
++    return false;
++  }
++#endif
++
+   MutexAutoLock lock(mMutex);
+ 
+   if (!NS_IsMainThread() && mOffMainThreadCommitsSuspended) {
+@@ -287,6 +309,10 @@ static void EmitTelemetryForVideoLowPower(VideoLowPowerType aVideoLowPower) {
+                        mWindowIsFullscreen);
+   mMutatedOnscreenLayerStructure = false;
+ 
++#ifdef XP_IOS
++  mLayersRetainedUntilNextScreenCommit.Clear();
++#endif
++
+   mCommitPending = false;
+ 
+   if (StaticPrefs::gfx_webrender_debug_dump_native_layer_tree_to_file()) {
+@@ -428,6 +454,19 @@ static void EmitTelemetryForVideoLowPower(VideoLowPowerType aVideoLowPower) {
+   if (mustRebuild) {
+     aRootCALayer.sublayers = sublayers;
+   }
++
++#ifdef XP_IOS
++  if (aRepresentation == WhichRepresentation::ONSCREEN) {
++    // HandleLayerDestroyed() removes the layer from mKnownLayers before
++    // CommitToScreen() updates the CALayer tree. The retained NativeLayerCA
++    // gives this commit access to the removed layer so it can set
++    // mContentCALayer.contents to nil.
++    for (const auto& layer : mLayersRetainedUntilNextScreenCommit) {
++      MOZ_ASSERT(!aSublayers.Contains(layer));
++      layer->ClearOnscreenSurfaceContents();
++    }
++  }
++#endif
+ }
+ 
+ SnapshotterCADelegate::~SnapshotterCADelegate() = default;
+@@ -1527,6 +1566,14 @@ CGColorRef CGColorCreateForDeviceColor(const gfx::DeviceColor& aColor) {
+   return updateSucceeded;
+ }
+ 
++#ifdef XP_IOS
++void NativeLayerCA::ClearOnscreenSurfaceContents() {
++  MutexAutoLock lock(mMutex);
++  GetRepresentation(WhichRepresentation::ONSCREEN).mContentCALayer.contents =
++      nil;
++}
++#endif
++
+ CALayer* NativeLayerCA::UnderlyingCALayer(WhichRepresentation aRepresentation) {
+   MutexAutoLock lock(mMutex);
+   return GetRepresentation(aRepresentation).UnderlyingCALayer();
+@@ -1539,7 +1586,8 @@ CGColorRef CGColorCreateForDeviceColor(const gfx::DeviceColor& aColor) {
+   AVSampleBufferDisplayLayer* videoLayer =
+       (AVSampleBufferDisplayLayer*)mContentCALayer;
+ 
+-  if (@available(macOS 11.0, iOS 14.0, *)) {
++  if ([videoLayer
++          respondsToSelector:@selector(requiresFlushToResumeDecoding)]) {
+     if (videoLayer.requiresFlushToResumeDecoding) {
+       [videoLayer flush];
+     }
+@@ -1645,6 +1693,11 @@ CGColorRef CGColorCreateForDeviceColor(const gfx::DeviceColor& aColor) {
+   if (osValue != noErr) {
+     MOZ_ASSERT(sampleBuffer == nullptr,
+                "Failed call shouldn't allocate memory.");
++    // A reconstructed IOSurface can transiently fail format validation. The
++    // next surface remains usable by the same display layer.
++    if (osValue == kCMSampleBufferError_InvalidMediaFormat) {
++      return true;
++    }
+ #ifdef NIGHTLY_BUILD
+     if (StaticPrefs::gfx_core_animation_specialize_video_log()) {
+       NSLog(@"VIDEO_LOG: EnqueueSurface failed on allocating sample buffer.");

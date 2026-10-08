@@ -1,0 +1,78 @@
+diff --git a/dom/ipc/ContentParent.cpp b/dom/ipc/ContentParent.cpp
+index 16ed33548742..bb86b7c2bc57 100644
+--- a/dom/ipc/ContentParent.cpp
++++ b/dom/ipc/ContentParent.cpp
+@@ -2943,14 +2943,15 @@ bool ContentParent::InitInternal(ProcessPriority aInitialPriority) {
+   Endpoint<PVRManagerChild> vrBridge;
+   Endpoint<PRemoteMediaManagerChild> videoManager;
+   AutoTArray<uint32_t, 4> namespaces;
++  uint64_t processToken = 0;
+ 
+   if (NS_SUCCEEDED(gpuReadyRv) &&
+       gpm->CreateContentBridges(OtherEndpointProcInfo(), &compositor,
+                                 &imageBridge, &vrBridge, &videoManager,
+-                                mChildID, &namespaces)) {
++                                mChildID, &namespaces, &processToken)) {
+     (void)SendInitRendering(std::move(compositor), std::move(imageBridge),
+                             std::move(vrBridge), std::move(videoManager),
+-                            namespaces);
++                            namespaces, processToken);
+   } else {
+     // This can fail if we've already started shutting down the compositor
+     // thread. See Bug 1562763 comment 8. On Android this can fail we are are
+@@ -3122,16 +3123,17 @@ void ContentParent::OnCompositorUnexpectedShutdown() {
+   Endpoint<PVRManagerChild> vrBridge;
+   Endpoint<PRemoteMediaManagerChild> videoManager;
+   AutoTArray<uint32_t, 4> namespaces;
++  uint64_t processToken = 0;
+ 
+   if (!gpm->CreateContentBridges(OtherEndpointProcInfo(), &compositor,
+                                  &imageBridge, &vrBridge, &videoManager,
+-                                 mChildID, &namespaces)) {
++                                 mChildID, &namespaces, &processToken)) {
+     return;
+   }
+ 
+   (void)SendReinitRendering(std::move(compositor), std::move(imageBridge),
+                             std::move(vrBridge), std::move(videoManager),
+-                            namespaces);
++                            namespaces, processToken);
+ }
+ 
+ void ContentParent::OnCompositorDeviceReset() {
+@@ -3887,9 +3889,16 @@ ContentParent::Observe(nsISupports* aSubject, const char* aTopic,
+ 
+   // listening for memory pressure event
+   if (!strcmp(aTopic, "memory-pressure")) {
++    // Each content process handles native memory pressure independently.
++    // The parent forwards only explicit heap-minimize requests.
++    if (!aData || !nsDependentString(aData).EqualsLiteral("heap-minimize")) {
++      return NS_OK;
++    }
+     (void)SendMemoryPressure(nsDependentString(aData));
+   } else if (!strcmp(aTopic, "memory-pressure-stop")) {
+-    (void)SendMemoryPressureStop();
++    // Each content process clears its memory pressure state independently.
++    return NS_OK;
++    // (void)SendMemoryPressureStop();
+   } else if (!strcmp(aTopic, "application-background")) {
+     (void)SendApplicationBackground();
+   } else if (!strcmp(aTopic, "application-foreground")) {
+@@ -8159,6 +8168,17 @@ IPCResult ContentParent::RecvKillGPUProcess() {
+ }
+ #endif
+ 
++IPCResult ContentParent::RecvNotifyGPUProcessLost(
++    const uint64_t& aProcessToken) {
++  // Route content-side abnormal compositor shutdown events through
++  // the active GPU process token so recovery targets the correct process.
++  gfx::GPUProcessManager* gpm = gfx::GPUProcessManager::Get();
++  if (gpm) {
++    gpm->NotifyRemoteActorDestroyed(aProcessToken);
++  }
++  return IPC_OK();
++}
++
+ RemoteType ThreadsafeContentParentHandle::GetRemoteType() {
+   return mLoadedOrigins->GetRemoteType();
+ }

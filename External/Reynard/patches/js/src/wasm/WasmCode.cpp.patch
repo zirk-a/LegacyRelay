@@ -1,0 +1,34 @@
+diff --git a/js/src/wasm/WasmCode.cpp b/js/src/wasm/WasmCode.cpp
+index a10d69a0901e..92bd93d5d9ce 100644
+--- a/js/src/wasm/WasmCode.cpp
++++ b/js/src/wasm/WasmCode.cpp
+@@ -29,6 +29,7 @@
+ #include "jit/FlushICache.h"  // for FlushExecutionContextForAllThreads
+ #include "jit/MacroAssembler.h"
+ #include "jit/PerfSpewer.h"
++#include "jit/ProcessExecutableMemory.h"
+ #include "util/Poison.h"
+ #include "vm/HelperThreadState.h"  // PartialTier2CompileTask
+ #ifdef MOZ_VTUNE
+@@ -205,7 +206,9 @@ bool CodeSource::copyAndLink(jit::AutoMarkJitCodeWritableForThread& writable,
+   if (masm_) {
+     masm_->executableCopy(codeStart);
+   } else {
+-    memcpy(codeStart, bytes_, length_);
++    uint8_t* writableCodeStart =
++        WritableJitAllocationFromExecutable(codeStart, length_);
++    memcpy(writableCodeStart, bytes_, length_);
+   }
+ 
+   // Use link data if we have it, or else fall back to basic linking using the
+@@ -384,7 +387,9 @@ SharedCodeSegment CodeSegment::allocate(const CodeSource& codeSource,
+   MOZ_ASSERT(codeEnd <= allocationEnd);
+   size_t paddingAfterCode = allocationEnd - codeEnd;
+   // The swept code pattern is guaranteed to crash if it is ever executed.
+-  memset(codeEnd, JS_SWEPT_CODE_PATTERN, paddingAfterCode);
++  uint8_t* writableCodeEnd =
++      WritableJitAllocationFromExecutable(codeEnd, paddingAfterCode);
++  memset(writableCodeEnd, JS_SWEPT_CODE_PATTERN, paddingAfterCode);
+ 
+   // Optimized compilation finishes on a background thread, so we must make sure
+   // to flush the icaches of all the executing threads.

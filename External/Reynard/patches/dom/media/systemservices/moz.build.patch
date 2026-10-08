@@ -1,0 +1,35 @@
+diff --git a/dom/media/systemservices/moz.build b/dom/media/systemservices/moz.build
+index f0d6241a8e83..ad1fd5bdcf67 100644
+--- a/dom/media/systemservices/moz.build
++++ b/dom/media/systemservices/moz.build
+@@ -36,13 +36,18 @@ if CONFIG["MOZ_WEBRTC"]:
+         ]
+     elif CONFIG["OS_TARGET"] == "Darwin":
+         UNIFIED_SOURCES += [
++            "objc_video_capture/capture_access.mm",
+             "objc_video_capture/device_info.mm",
+             "objc_video_capture/device_info_avfoundation.mm",
+             "objc_video_capture/device_info_objc.mm",
++            "objc_video_capture/native_video_frame.mm",
+             "objc_video_capture/rtc_video_capture_objc.mm",
+             "objc_video_capture/video_capture.mm",
+             "objc_video_capture/video_capture_avfoundation.mm",
+         ]
++        SOURCES += [
++            "/third_party/libwebrtc/sdk/objc/native/src/objc_frame_buffer.mm",
++        ]
+         LOCAL_INCLUDES += [
+             "/third_party/libwebrtc/sdk/objc",
+             "/third_party/libwebrtc/sdk/objc/base",
+@@ -51,9 +56,10 @@ if CONFIG["MOZ_WEBRTC"]:
+             "-fobjc-arc",
+         ]
+ 
+-    if CONFIG["OS_TARGET"] == "Android":
++    if CONFIG["OS_TARGET"] == "Android" or CONFIG["MOZ_WIDGET_TOOLKIT"] == "uikit":
+         UNIFIED_SOURCES += [
+             "EmptyDesktopCapturer.cpp",
++            "video_engine/desktop_capture_impl_empty.cc",
+         ]
+     else:
+         SOURCES += [

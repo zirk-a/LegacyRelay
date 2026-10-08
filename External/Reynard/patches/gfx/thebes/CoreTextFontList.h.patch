@@ -1,0 +1,84 @@
+diff --git a/gfx/thebes/CoreTextFontList.h b/gfx/thebes/CoreTextFontList.h
+index 780964a8755e..06b3a4c818c8 100644
+--- a/gfx/thebes/CoreTextFontList.h
++++ b/gfx/thebes/CoreTextFontList.h
+@@ -35,6 +35,11 @@ class CTFontEntry final : public gfxFontEntry {
+   CTFontEntry(const nsACString& aPostscriptName, WeightRange aWeight,
+               bool aIsStandardFace = false, double aSizeHint = 0.0);
+ 
++  CTFontEntry(const nsACString& aPostscriptName, CTFontRef aFont,
++              WeightRange aWeight,
++              mozilla::gfx::UnscaledFont::DescriptorProvenance aProvenance,
++              bool aIsStandardFace = false, double aSizeHint = 0.0);
++
+   // for use with data fonts
+   CTFontEntry(const nsACString& aPostscriptName, CGFontRef aFontRef,
+               WeightRange aWeight, WidthRange aWidth, SlantStyleRange aStyle,
+@@ -77,7 +82,17 @@ class CTFontEntry final : public gfxFontEntry {
+ 
+  protected:
+   // Protected destructor, to discourage deletion outside of Release():
+-  virtual ~CTFontEntry() { ::CGFontRelease(mFontRef); }
++  virtual ~CTFontEntry() {
++    if (mCharacterSet) {
++      ::CFRelease(mCharacterSet);
++    }
++    if (mFontDesc) {
++      ::CFRelease(mFontDesc);
++    }
++    if (mFontRef) {
++      ::CGFontRelease(mFontRef);
++    }
++  }
+ 
+   gfxFont* CreateFontInstance(const gfxFontStyle* aFontStyle) override;
+ 
+@@ -89,11 +104,18 @@ class CTFontEntry final : public gfxFontEntry {
+ 
+   bool HasFontTableInternal(uint32_t aTableTag) override;
+ 
++  bool TestCharacterMap(uint32_t aCh) override;
++
+   static void DestroyBlobFunc(void* aUserData);
+ 
+   FontTableCache* GetFontTableCache(bool aCreate) override { return nullptr; }
+ 
+   CGFontRef mFontRef MOZ_GUARDED_BY(mLock);  // owning reference
++  CTFontDescriptorRef mFontDesc = nullptr;
++  CFCharacterSetRef mCharacterSet = nullptr;
++  mozilla::gfx::UnscaledFont::DescriptorProvenance mDescriptorProvenance =
++      mozilla::gfx::UnscaledFont::DescriptorProvenance::NativeFace;
++  uint32_t mSystemFontTraits = 0;
+ 
+   const double mSizeHint;
+ 
+@@ -128,13 +150,15 @@ class CTFontFamily : public gfxFontFamily {
+   CTFontFamily(const nsACString& aName, FontVisibility aVisibility)
+       : gfxFontFamily(aName, aVisibility) {}
+ 
+-  CTFontFamily(const nsACString& aName, CTFontRef aSystemFont)
++  CTFontFamily(const nsACString& aName, CTFontRef aFont,
++               mozilla::gfx::UnscaledFont::DescriptorProvenance aProvenance)
+       : gfxFontFamily(aName, FontVisibility::Unknown),
+-        mForSystemFont(aSystemFont) {
++        mSeedFont(aFont),
++        mDescriptorProvenance(aProvenance) {
+     // I don't think the system font instance is at much risk of being deleted,
+     // but to be on the safe side let's retain a reference until we're finished
+     // using it for lazy initialization.
+-    CFRetain(mForSystemFont);
++    CFRetain(mSeedFont);
+   }
+ 
+   virtual ~CTFontFamily() = default;
+@@ -150,7 +174,9 @@ class CTFontFamily : public gfxFontFamily {
+   // If non-null, this is a family representing the system UI font, and should
+   // use the given CTFontRef as the basis for initialization as the normal
+   // font-manager APIs based on family name won't handle it.
+-  CTFontRef mForSystemFont = nullptr;
++  CTFontRef mSeedFont = nullptr;
++  mozilla::gfx::UnscaledFont::DescriptorProvenance mDescriptorProvenance =
++      mozilla::gfx::UnscaledFont::DescriptorProvenance::NativeFace;
+ };
+ 
+ class gfxMacFontFamily final : public CTFontFamily {

@@ -1,0 +1,39 @@
+diff --git a/gfx/layers/NativeLayerCA.h b/gfx/layers/NativeLayerCA.h
+index 1456d03f8962..cc751b69c7db 100644
+--- a/gfx/layers/NativeLayerCA.h
++++ b/gfx/layers/NativeLayerCA.h
+@@ -157,6 +157,12 @@ class NativeLayerRootCA final : public NativeLayerRoot {
+   void SetLayers(const nsTArray<RefPtr<NativeLayer>>& aLayers) override;
+   UniquePtr<NativeLayerRootSnapshotter> CreateSnapshotter() override;
+ 
++#ifdef XP_IOS
++  // Retain aLayer so the next CommitToScreen() can clear its onscreen contents.
++  // aLayer must be a NativeLayerCA absent from that commit's layer list.
++  void RetainLayerUntilNextScreenCommit(NativeLayer* aLayer);
++#endif
++
+   void SetBackingScale(float aBackingScale);
+   float BackingScale();
+ 
+@@ -242,6 +248,10 @@ class NativeLayerRootCA final : public NativeLayerRoot {
+   bool mMutatedOnscreenLayerStructure = false;
+   bool mMutatedOffscreenLayerStructure = false;
+ 
++#ifdef XP_IOS
++  nsTArray<RefPtr<NativeLayerCA>> mLayersRetainedUntilNextScreenCommit;
++#endif
++
+   // How many times have we committed since the last time we emitted
+   // telemetry?
+   unsigned int mTelemetryCommitCount = 0;
+@@ -438,6 +448,10 @@ class NativeLayerCA : public NativeLayer {
+   bool ApplyChanges(WhichRepresentation aRepresentation, UpdateType aUpdate,
+                     bool* aMustRebuild);
+ 
++#ifdef XP_IOS
++  void ClearOnscreenSurfaceContents();
++#endif
++
+   void SetBackingScale(float aBackingScale);
+ 
+   // Invalidate aUpdateRegion and make sure that mInProgressSurface retains any

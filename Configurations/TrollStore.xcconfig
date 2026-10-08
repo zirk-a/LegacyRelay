@@ -1,0 +1,3 @@
+#include "Shared.xcconfig"
+LEGACYRELAY_VARIANT = trollstore
+SWIFT_ACTIVE_COMPILATION_CONDITIONS = $(inherited) LEGACYRELAY_TROLLSTORE

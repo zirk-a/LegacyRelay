@@ -1,0 +1,33 @@
+diff --git a/widget/nsIWidget.h b/widget/nsIWidget.h
+index 031a63b997c3..5973a9450fdb 100644
+--- a/widget/nsIWidget.h
++++ b/widget/nsIWidget.h
+@@ -1606,8 +1606,8 @@ class nsIWidget : public nsSupportsWeakReference {
+     NUMERIC_KEY_PAD = 0x01000000,  // when the key is coming from the keypad
+ 
+     ALL_BITS = CAPS_LOCK | NUM_LOCK | SHIFT_L | SHIFT_R | CTRL_L | CTRL_R |
+-               ALT_L | ALT_R | COMMAND_L | COMMAND_R | HELP | ALTGRAPH |
+-               FUNCTION | NUMERIC_KEY_PAD
++        ALT_L | ALT_R | COMMAND_L | COMMAND_R | HELP | ALTGRAPH | FUNCTION |
++        NUMERIC_KEY_PAD
+   };
+ 
+   /**
+@@ -2313,12 +2313,16 @@ class nsIWidget : public nsSupportsWeakReference {
+    * @param aMessage message being sent to Android UI thread.
+    */
+   virtual void RecvToolbarAnimatorMessageFromCompositor(int32_t aMessage) {}
++#endif
+ 
+   virtual void UpdateDynamicToolbarMaxHeight(mozilla::ScreenIntCoord aHeight) {}
+   virtual mozilla::ScreenIntCoord GetDynamicToolbarMaxHeight() const {
+     return 0;
+   }
+-#endif
++  // The height the dynamic toolbar keeps when collapsed.
++  virtual mozilla::ScreenIntCoord GetDynamicToolbarMinHeight() const {
++    return 0;
++  }
+ 
+   void EnsureLocalesChangedObserver();
+   virtual void LocalesChanged() {}

@@ -1,0 +1,38 @@
+diff --git a/gfx/thebes/gfxPlatformMac.cpp b/gfx/thebes/gfxPlatformMac.cpp
+index 61fb01d3dc7c..69bf918edcbb 100644
+--- a/gfx/thebes/gfxPlatformMac.cpp
++++ b/gfx/thebes/gfxPlatformMac.cpp
+@@ -20,6 +20,8 @@
+ #ifdef MOZ_WIDGET_COCOA
+ #  include "mozilla/MacAutoreleasePool.h"
+ #  include "nsCocoaFeatures.h"
++#else
++#  include "gfxUIKitVsyncSource.h"
+ #endif
+ #include "GeckoProfiler.h"
+ #include "gfx2DGlue.h"
+@@ -1034,8 +1036,22 @@ gfxPlatformMac::CreateGlobalHardwareVsyncSource() {
+   osxVsyncSource->DisableVsync();
+   return osxVsyncSource.forget();
+ #else
+-  // TODO: CADisplayLink
+-  return GetSoftwareVsyncSource();
++  RefPtr<VsyncSource> uikitVsyncSource = CreateUIKitVsyncSource();
++  if (!uikitVsyncSource) {
++    gfxWarning()
++        << "UIKit Vsync source not created. Falling back to software vsync.";
++    return GetSoftwareVsyncSource();
++  }
++
++  uikitVsyncSource->EnableVsync();
++  if (!uikitVsyncSource->IsVsyncEnabled()) {
++    gfxWarning()
++        << "UIKit Vsync source not enabled. Falling back to software vsync.";
++    return GetSoftwareVsyncSource();
++  }
++
++  uikitVsyncSource->DisableVsync();
++  return uikitVsyncSource.forget();
+ #endif
+ }
+ 
